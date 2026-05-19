@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Change this when deploying to a different GitHub Pages repo name
-const GITHUB_PAGES_BASE = '/hci-diary-study/'
+// Must match your GitHub repository name (GitHub Pages project site path).
+// Current remote: SoniaSuns/storytelling-pilot → https://soniasuns.github.io/storytelling-pilot/
+const GITHUB_PAGES_BASE = '/storytelling-pilot/'
 
 export default defineConfig({
   plugins: [react()],

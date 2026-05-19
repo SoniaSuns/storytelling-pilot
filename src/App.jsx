@@ -31,17 +31,6 @@ function SetupPage({ onParticipantReady }) {
   const names = getParticipantNames()
   const [mode, setMode] = useState(names.length > 0 ? 'select' : 'create')
 
-  function handleSelect(name) {
-    setActiveParticipantName(name)
-    onParticipantReady(name)
-    navigate('/check-in')
-  }
-
-  function handleComplete(name) {
-    onParticipantReady(name)
-    navigate('/check-in')
-  }
-
   return (
     <>
       <header className="app-header">
@@ -53,14 +42,44 @@ function SetupPage({ onParticipantReady }) {
       <PrivacyNotice />
       {mode === 'select' ? (
         <ParticipantSelector
-          onSelect={handleSelect}
+          onSelect={(name) => {
+            setActiveParticipantName(name)
+            onParticipantReady(name)
+            navigate('/check-in')
+          }}
           onCreateNew={() => setMode('create')}
         />
       ) : (
-        <ParticipantSetup onComplete={handleComplete} />
+        <ParticipantSetup
+          onComplete={(name) => {
+            onParticipantReady(name)
+            navigate('/check-in')
+          }}
+        />
       )}
     </>
   )
+}
+
+function AppShell({ participantName, children }) {
+  return (
+    <>
+      <header className="app-header">
+        <h1>HCI Diary Study</h1>
+        <p className="subtitle">Participant: {participantName}</p>
+      </header>
+      <PrivacyNotice />
+      <Navigation />
+      {children}
+    </>
+  )
+}
+
+function Guard({ participantName, children }) {
+  if (!participantName || !getParticipant(participantName)) {
+    return <Navigate to="/setup" replace />
+  }
+  return <AppShell participantName={participantName}>{children}</AppShell>
 }
 
 function IncidentEditPage({ participantName }) {
@@ -74,7 +93,10 @@ function IncidentEditPage({ participantName }) {
   )
 }
 
-function MainLayout({ participantName, onParticipantChange }) {
+function AppRoutes() {
+  const [participantName, setParticipantName] = useState(() =>
+    getActiveParticipantName()
+  )
   const navigate = useNavigate()
   const today = formatDateISO()
 
@@ -100,110 +122,103 @@ function MainLayout({ participantName, onParticipantChange }) {
         updated.incidents[dateISO] = filtered
       }
       saveParticipant(participantName, updated)
-      onParticipantChange()
+      setParticipantName(getActiveParticipantName())
     },
-    [participantName, onParticipantChange]
+    [participantName]
   )
 
   return (
-    <>
-      <header className="app-header">
-        <h1>HCI Diary Study</h1>
-        <p className="subtitle">Participant: {participantName}</p>
-      </header>
-      <PrivacyNotice />
-      <Navigation />
+    <div className="app-shell">
       <Routes>
         <Route
+          path="/setup"
+          element={
+            <SetupPage onParticipantReady={setParticipantName} />
+          }
+        />
+        <Route
           path="/check-in"
-          element={<DailyCheckIn participantName={participantName} />}
+          element={
+            <Guard participantName={participantName}>
+              <DailyCheckIn participantName={participantName} />
+            </Guard>
+          }
         />
         <Route
           path="/progress"
-          element={<StudyProgress participantName={participantName} />}
+          element={
+            <Guard participantName={participantName}>
+              <StudyProgress participantName={participantName} />
+            </Guard>
+          }
         />
         <Route
           path="/incidents"
           element={
-            <IncidentList
-              participantName={participantName}
-              dateISO={today}
-              onDelete={handleDeleteIncident}
-            />
+            <Guard participantName={participantName}>
+              <IncidentList
+                participantName={participantName}
+                dateISO={today}
+                onDelete={handleDeleteIncident}
+              />
+            </Guard>
           }
         />
         <Route
           path="/incidents/new"
           element={
-            <IncidentReportForm
-              participantName={participantName}
-              dateISO={today}
-            />
+            <Guard participantName={participantName}>
+              <IncidentReportForm
+                participantName={participantName}
+                dateISO={today}
+              />
+            </Guard>
           }
         />
         <Route
           path="/incidents/edit/:incidentId"
-          element={<IncidentEditPage participantName={participantName} />}
+          element={
+            <Guard participantName={participantName}>
+              <IncidentEditPage participantName={participantName} />
+            </Guard>
+          }
         />
         <Route
           path="/data"
           element={
-            <>
+            <Guard participantName={participantName}>
               <ExportControls participantName={participantName} />
               <DataManagement
                 onSwitchParticipant={(name) => {
                   setActiveParticipantName(name)
-                  onParticipantChange(name)
+                  setParticipantName(name)
                   navigate('/check-in')
                 }}
                 onCreateNew={() => navigate('/setup')}
               />
-            </>
+            </Guard>
           }
         />
-        <Route path="*" element={<Navigate to="/check-in" replace />} />
+        <Route
+          path="/"
+          element={
+            participantName && getParticipant(participantName) ? (
+              <Navigate to="/check-in" replace />
+            ) : (
+              <Navigate to="/setup" replace />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </div>
   )
 }
 
 export default function App() {
-  const [participantName, setParticipantName] = useState(() =>
-    getActiveParticipantName()
-  )
-
-  const participant = participantName
-    ? getParticipant(participantName)
-    : null
-  const isReady = Boolean(participantName && participant)
-
   return (
     <HashRouter>
-      <div className="app-shell">
-        <Routes>
-          <Route
-            path="/setup"
-            element={
-              <SetupPage
-                onParticipantReady={(name) => setParticipantName(name)}
-              />
-            }
-          />
-          <Route
-            path="/*"
-            element={
-              isReady ? (
-                <MainLayout
-                  participantName={participantName}
-                  onParticipantChange={setParticipantName}
-                />
-              ) : (
-                <Navigate to="/setup" replace />
-              )
-            }
-          />
-        </Routes>
-      </div>
+      <AppRoutes />
     </HashRouter>
   )
 }

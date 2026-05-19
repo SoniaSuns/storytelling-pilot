@@ -30,7 +30,7 @@ export default function StudyProgress({ participantName }) {
       <div className="card">
         <h2>Study progress</h2>
         <p className="hint">Study start date is not set in your profile.</p>
-      </motion>
+      </div>
     )
   }
 
@@ -39,14 +39,14 @@ export default function StudyProgress({ participantName }) {
   const incidents = participant?.incidents || {}
 
   return (
-    <motion className="card">
+    <div className="card">
       <h2>Study progress</h2>
       <p className="instructions">
         Track your 7-day diary study at a glance. Complete your daily check-in
         each day; add incident reports when something notable happened.
       </p>
 
-      <motion className="progress-table-wrap">
+      <div className="progress-table-wrap">
         <table className="progress-table">
           <thead>
             <tr>
@@ -98,7 +98,7 @@ export default function StudyProgress({ participantName }) {
             })}
           </tbody>
         </table>
-      </motion>
+      </div>
 
       {checkIns[today]?.hadIncident === 'Yes' &&
         (incidents[today] || []).length === 0 && (
@@ -107,6 +107,6 @@ export default function StudyProgress({ participantName }) {
             <Link to="/incidents/new">Add incident report</Link>
           </p>
         )}
-    </motion>
+    </div>
   )
 }

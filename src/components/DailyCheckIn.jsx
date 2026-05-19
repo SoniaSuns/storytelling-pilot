@@ -83,11 +83,11 @@ export default function DailyCheckIn({ participantName }) {
   const incidentCount = (participant?.incidents?.[today] || []).length
 
   return (
-    <motion className="card">
-      <motion className="study-day-banner">
+    <div className="card">
+      <div className="study-day-banner">
         <strong>Study day {Math.min(studyDay, STUDY_DAYS)} of {STUDY_DAYS}</strong>
         <span>{formatDisplayDate(today)}</span>
-      </motion>
+      </div>
 
       <h2>Daily check-in</h2>
       <p className="instructions">
@@ -109,11 +109,11 @@ export default function DailyCheckIn({ participantName }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        <motion className="form-group">
+        <div className="form-group">
           <label className="required">
             Did you use any AI agent or intelligent system today?
           </label>
-          <motion className="radio-group">
+          <div className="radio-group">
             <label>
               <input
                 type="radio"
@@ -134,17 +134,17 @@ export default function DailyCheckIn({ participantName }) {
               />
               No
             </label>
-          </motion>
+          </div>
           {errors.usedAI && <p className="error-message">{errors.usedAI}</p>}
-        </motion>
+        </div>
 
-        <motion className="form-group">
+        <div className="form-group">
           <label className="required">
             Did you encounter any AI misunderstanding, failure, discomfort,
             boundary issue, or situation where the agent did not meet your
             expectation?
           </label>
-          <motion className="radio-group">
+          <div className="radio-group">
             <label>
               <input
                 type="radio"
@@ -165,14 +165,14 @@ export default function DailyCheckIn({ participantName }) {
               />
               No
             </label>
-          </motion>
+          </div>
           {errors.hadIncident && (
             <p className="error-message">{errors.hadIncident}</p>
           )}
-        </motion>
+        </div>
 
         {hadIncident === 'No' && (
-          <motion className="form-group">
+          <div className="form-group">
             <label className="required" htmlFor="noIncidentReason">
               If no incident happened today, what was the reason?
             </label>
@@ -191,10 +191,10 @@ export default function DailyCheckIn({ participantName }) {
             {errors.noIncidentReason && (
               <p className="error-message">{errors.noIncidentReason}</p>
             )}
-          </motion>
+          </div>
         )}
 
-        <motion className="form-group">
+        <div className="form-group">
           <label htmlFor="dailyReflection">
             Brief daily reflection (optional)
           </label>
@@ -204,9 +204,9 @@ export default function DailyCheckIn({ participantName }) {
             onChange={(e) => setDailyReflection(e.target.value)}
             placeholder="Is there anything you want to add about today's AI interactions?"
           />
-        </motion>
+        </div>
 
-        <motion className="btn-group">
+        <div className="btn-group">
           <button type="submit" className="btn btn-primary">
             Save check-in
           </button>
@@ -215,7 +215,7 @@ export default function DailyCheckIn({ participantName }) {
               Add incident report
             </Link>
           )}
-        </motion>
+        </div>
       </form>
 
       {hadIncident === 'Yes' && incidentCount > 0 && (
@@ -225,6 +225,6 @@ export default function DailyCheckIn({ participantName }) {
           <Link to="/incidents">View incidents</Link>
         </p>
       )}
-    </motion>
+    </div>
   )
 }
