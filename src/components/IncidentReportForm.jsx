@@ -113,7 +113,7 @@ export default function IncidentReportForm({
       ...participant,
       incidents: { ...participant.incidents, [today]: list },
     })
-    navigate('/incidents')
+    navigate(`/incidents/${today}`)
   }
 
   return (

@@ -336,6 +336,31 @@ body {
   background: var(--color-accent-bg);
 }
 
+.progress-date-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.progress-date-link:hover {
+  text-decoration: underline;
+}
+
+.progress-actions {
+  white-space: nowrap;
+}
+
+.progress-actions .btn-sm {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+  margin-right: 0.25rem;
+}
+
+.reflection-hint {
+  line-height: 1.45;
+  margin-bottom: 0.5rem;
+}
+
 .status-badge {
   display: inline-block;
   padding: 0.15rem 0.45rem;

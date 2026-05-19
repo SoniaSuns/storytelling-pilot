@@ -8,4 +8,8 @@ const GITHUB_PAGES_BASE = '/storytelling-pilot/'
 export default defineConfig({
   plugins: [react()],
   base: GITHUB_PAGES_BASE,
+  build: {
+    outDir: 'docs',
+    emptyOutDir: true,
+  },
 })

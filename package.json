@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cp index.dev.html index.html && vite",
     "build": "cp index.dev.html index.html && vite build && cp docs/index.html index.html && rm -rf assets && cp -r docs/assets assets && touch .nojekyll docs/.nojekyll",
-    "preview": "vite preview --outDir docs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",

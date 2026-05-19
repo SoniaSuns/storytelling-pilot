@@ -24,7 +24,7 @@ import {
   getParticipantNames,
   saveParticipant,
 } from './utils/storage'
-import { formatDateISO } from './utils/dates'
+import { formatDateISO, isStudyDateISO } from './utils/dates'
 
 function SetupPage({ onParticipantReady }) {
   const navigate = useNavigate()
@@ -45,7 +45,7 @@ function SetupPage({ onParticipantReady }) {
           onSelect={(name) => {
             setActiveParticipantName(name)
             onParticipantReady(name)
-            navigate('/check-in')
+            navigate(`/check-in/${formatDateISO()}`)
           }}
           onCreateNew={() => setMode('create')}
         />
@@ -53,7 +53,7 @@ function SetupPage({ onParticipantReady }) {
         <ParticipantSetup
           onComplete={(name) => {
             onParticipantReady(name)
-            navigate('/check-in')
+            navigate(`/check-in/${formatDateISO()}`)
           }}
         />
       )}
@@ -82,14 +82,61 @@ function Guard({ participantName, children }) {
   return <AppShell participantName={participantName}>{children}</AppShell>
 }
 
-function IncidentEditPage({ participantName }) {
-  const { incidentId } = useParams()
+function StudyDateGuard({ participantName, dateISO, children }) {
+  const participant = getParticipant(participantName)
+  const studyStartDate = participant?.profile?.studyStartDate
+  if (!isStudyDateISO(studyStartDate, dateISO)) {
+    return <Navigate to="/progress" replace />
+  }
+  return children
+}
+
+function CheckInPage({ participantName }) {
+  const { dateISO } = useParams()
+  const resolved = dateISO || formatDateISO()
   return (
-    <IncidentReportForm
-      participantName={participantName}
-      incidentId={incidentId}
-      dateISO={formatDateISO()}
-    />
+    <StudyDateGuard participantName={participantName} dateISO={resolved}>
+      <DailyCheckIn participantName={participantName} dateISO={resolved} />
+    </StudyDateGuard>
+  )
+}
+
+function IncidentsPage({ participantName, onDelete }) {
+  const { dateISO } = useParams()
+  const resolved = dateISO || formatDateISO()
+  return (
+    <StudyDateGuard participantName={participantName} dateISO={resolved}>
+      <IncidentList
+        participantName={participantName}
+        dateISO={resolved}
+        onDelete={onDelete}
+      />
+    </StudyDateGuard>
+  )
+}
+
+function IncidentNewPage({ participantName }) {
+  const { dateISO } = useParams()
+  return (
+    <StudyDateGuard participantName={participantName} dateISO={dateISO}>
+      <IncidentReportForm
+        participantName={participantName}
+        dateISO={dateISO}
+      />
+    </StudyDateGuard>
+  )
+}
+
+function IncidentEditPage({ participantName }) {
+  const { dateISO, incidentId } = useParams()
+  return (
+    <StudyDateGuard participantName={participantName} dateISO={dateISO}>
+      <IncidentReportForm
+        participantName={participantName}
+        incidentId={incidentId}
+        dateISO={dateISO}
+      />
+    </StudyDateGuard>
   )
 }
 
@@ -138,9 +185,13 @@ function AppRoutes() {
         />
         <Route
           path="/check-in"
+          element={<Navigate to={`/check-in/${today}`} replace />}
+        />
+        <Route
+          path="/check-in/:dateISO"
           element={
             <Guard participantName={participantName}>
-              <DailyCheckIn participantName={participantName} />
+              <CheckInPage participantName={participantName} />
             </Guard>
           }
         />
@@ -154,32 +205,32 @@ function AppRoutes() {
         />
         <Route
           path="/incidents"
-          element={
-            <Guard participantName={participantName}>
-              <IncidentList
-                participantName={participantName}
-                dateISO={today}
-                onDelete={handleDeleteIncident}
-              />
-            </Guard>
-          }
+          element={<Navigate to={`/incidents/${today}`} replace />}
         />
         <Route
-          path="/incidents/new"
-          element={
-            <Guard participantName={participantName}>
-              <IncidentReportForm
-                participantName={participantName}
-                dateISO={today}
-              />
-            </Guard>
-          }
-        />
-        <Route
-          path="/incidents/edit/:incidentId"
+          path="/incidents/:dateISO/edit/:incidentId"
           element={
             <Guard participantName={participantName}>
               <IncidentEditPage participantName={participantName} />
+            </Guard>
+          }
+        />
+        <Route
+          path="/incidents/:dateISO/new"
+          element={
+            <Guard participantName={participantName}>
+              <IncidentNewPage participantName={participantName} />
+            </Guard>
+          }
+        />
+        <Route
+          path="/incidents/:dateISO"
+          element={
+            <Guard participantName={participantName}>
+              <IncidentsPage
+                participantName={participantName}
+                onDelete={handleDeleteIncident}
+              />
             </Guard>
           }
         />
@@ -192,7 +243,7 @@ function AppRoutes() {
                 onSwitchParticipant={(name) => {
                   setActiveParticipantName(name)
                   setParticipantName(name)
-                  navigate('/check-in')
+                  navigate(`/check-in/${today}`)
                 }}
                 onCreateNew={() => navigate('/setup')}
               />
@@ -203,7 +254,7 @@ function AppRoutes() {
           path="/"
           element={
             participantName && getParticipant(participantName) ? (
-              <Navigate to="/check-in" replace />
+              <Navigate to={`/check-in/${today}`} replace />
             ) : (
               <Navigate to="/setup" replace />
             )

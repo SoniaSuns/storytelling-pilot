@@ -42,8 +42,9 @@ export default function StudyProgress({ participantName }) {
     <div className="card">
       <h2>Study progress</h2>
       <p className="instructions">
-        Track your 7-day diary study at a glance. Complete your daily check-in
-        each day; add incident reports when something notable happened.
+        Track your 7-day diary study at a glance. Click a day below to fill in or
+        edit that day&apos;s daily check-in or incident reports (including past
+        days).
       </p>
 
       <div className="progress-table-wrap">
@@ -54,6 +55,7 @@ export default function StudyProgress({ participantName }) {
               <th>Date</th>
               <th>Check-in</th>
               <th>Incidents</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -67,7 +69,15 @@ export default function StudyProgress({ participantName }) {
               return (
                 <tr key={date} className={isToday ? 'today' : ''}>
                   <td>{studyDay}</td>
-                  <td>{formatDisplayDate(date)}</td>
+                  <td>
+                    <Link
+                      to={`/check-in/${date}`}
+                      className="progress-date-link"
+                      title="Open daily check-in for this day"
+                    >
+                      {formatDisplayDate(date)}
+                    </Link>
+                  </td>
                   <td>
                     <span
                       className={`status-badge ${checkInStatus === 'complete' ? 'complete' : 'missing'}`}
@@ -93,6 +103,20 @@ export default function StudyProgress({ participantName }) {
                       <span className="status-badge missing">Unknown</span>
                     )}
                   </td>
+                  <td className="progress-actions">
+                    <Link
+                      to={`/check-in/${date}`}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Check-in
+                    </Link>
+                    <Link
+                      to={`/incidents/${date}`}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Incidents
+                    </Link>
+                  </td>
                 </tr>
               )
             })}
@@ -104,7 +128,7 @@ export default function StudyProgress({ participantName }) {
         (incidents[today] || []).length === 0 && (
           <p className="hint" style={{ marginTop: '1rem' }}>
             You marked an incident for today but have not added a report yet.{' '}
-            <Link to="/incidents/new">Add incident report</Link>
+            <Link to={`/incidents/${today}/new`}>Add incident report</Link>
           </p>
         )}
     </div>

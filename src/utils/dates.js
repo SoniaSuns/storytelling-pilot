@@ -43,6 +43,11 @@ export function isDateInStudyRange(studyStartDate, dateISO) {
   return dayNum >= 1 && dayNum <= STUDY_DAYS
 }
 
+export function isStudyDateISO(studyStartDate, dateISO) {
+  if (!studyStartDate || !dateISO) return false
+  return getStudyDates(studyStartDate).some((d) => d.date === dateISO)
+}
+
 export function formatDisplayDate(iso) {
   const d = parseDateISO(iso)
   return d.toLocaleDateString('en-US', {
