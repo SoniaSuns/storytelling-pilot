@@ -1,75 +1,112 @@
+import { Link } from 'react-router-dom'
+import {
+  getStudyDates,
+  formatDisplayDate,
+  formatDateISO,
+} from '../utils/dates'
 import { getParticipant } from '../utils/storage'
-import { getStudyDates, formatDisplayDate } from '../utils/dates'
 
-function getIncidentStatus(checkIn, incidentsForDay) {
-  if (incidentsForDay?.length > 0) return 'Incident reported'
-  if (checkIn?.hadIncident === 'Yes') return 'No incident report yet'
-  if (checkIn?.hadIncident === 'No') return 'No incident'
-  return 'Unknown'
+function getCheckInStatus(checkIn) {
+  if (!checkIn || !checkIn.completedAt) return 'missing'
+  return 'complete'
 }
 
-function statusBadge(status, type) {
-  if (type === 'checkin') {
-    if (status === 'Completed') return 'badge-completed'
-    return 'badge-pending'
+function getIncidentStatus(checkIn, incidentsForDay) {
+  if (!checkIn) return 'unknown'
+  if (checkIn.hadIncident === 'Yes') {
+    return incidentsForDay.length > 0 ? 'reported' : 'partial'
   }
-  if (status === 'Incident reported') return 'badge-incident'
-  if (status === 'No incident') return 'badge-none'
-  return 'badge-pending'
+  if (checkIn.hadIncident === 'No') return 'none'
+  return 'unknown'
 }
 
 export default function StudyProgress({ participantName }) {
   const participant = getParticipant(participantName)
-  const profile = participant?.profile
-  if (!profile) return null
+  const studyStartDate = participant?.profile?.studyStartDate
+  const today = formatDateISO()
 
-  const studyDates = getStudyDates(profile.studyStartDate)
+  if (!studyStartDate) {
+    return (
+      <div className="card">
+        <h2>Study progress</h2>
+        <p className="hint">Study start date is not set in your profile.</p>
+      </motion>
+    )
+  }
+
+  const studyDates = getStudyDates(studyStartDate)
+  const checkIns = participant?.dailyCheckIns || {}
+  const incidents = participant?.incidents || {}
 
   return (
-    <div className="card">
-      <h2>7-day study progress</h2>
-      <p className="hint" style={{ marginBottom: '1rem' }}>
-        Study started: {formatDisplayDate(profile.studyStartDate)}
+    <motion className="card">
+      <h2>Study progress</h2>
+      <p className="instructions">
+        Track your 7-day diary study at a glance. Complete your daily check-in
+        each day; add incident reports when something notable happened.
       </p>
-      <table className="progress-table">
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>Date</th>
-            <th>Check-in</th>
-            <th>Incidents</th>
-          </tr>
-        </thead>
-        <tbody>
-          {studyDates.map(({ studyDay, date }) => {
-            const checkIn = participant.dailyCheckIns?.[date]
-            const incidents = participant.incidents?.[date]
-            const checkInStatus = checkIn ? 'Completed' : 'Not completed'
-            const incidentStatus = getIncidentStatus(checkIn, incidents)
 
-            return (
-              <tr key={date}>
-                <td>Day {studyDay}</td>
-                <td>{formatDisplayDate(date)}</td>
-                <td>
-                  <span
-                    className={`progress-badge ${statusBadge(checkInStatus, 'checkin')}`}
-                  >
-                    {checkInStatus}
-                  </span>
-                </td>
-                <td>
-                  <span
-                    className={`progress-badge ${statusBadge(incidentStatus, 'incident')}`}
-                  >
-                    {incidentStatus}
-                  </span>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
+      <motion className="progress-table-wrap">
+        <table className="progress-table">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Date</th>
+              <th>Check-in</th>
+              <th>Incidents</th>
+            </tr>
+          </thead>
+          <tbody>
+            {studyDates.map(({ studyDay, date }) => {
+              const checkIn = checkIns[date]
+              const dayIncidents = incidents[date] || []
+              const checkInStatus = getCheckInStatus(checkIn)
+              const incidentStatus = getIncidentStatus(checkIn, dayIncidents)
+              const isToday = date === today
+
+              return (
+                <tr key={date} className={isToday ? 'today' : ''}>
+                  <td>{studyDay}</td>
+                  <td>{formatDisplayDate(date)}</td>
+                  <td>
+                    <span
+                      className={`status-badge ${checkInStatus === 'complete' ? 'complete' : 'missing'}`}
+                    >
+                      {checkInStatus === 'complete' ? 'Completed' : 'Not completed'}
+                    </span>
+                  </td>
+                  <td>
+                    {incidentStatus === 'reported' && (
+                      <span className="status-badge complete">
+                        Incident reported ({dayIncidents.length})
+                      </span>
+                    )}
+                    {incidentStatus === 'none' && (
+                      <span className="status-badge partial">No incident</span>
+                    )}
+                    {incidentStatus === 'partial' && (
+                      <span className="status-badge partial">
+                        Check-in says yes — add report
+                      </span>
+                    )}
+                    {incidentStatus === 'unknown' && (
+                      <span className="status-badge missing">Unknown</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </motion>
+
+      {checkIns[today]?.hadIncident === 'Yes' &&
+        (incidents[today] || []).length === 0 && (
+          <p className="hint" style={{ marginTop: '1rem' }}>
+            You marked an incident for today but have not added a report yet.{' '}
+            <Link to="/incidents/new">Add incident report</Link>
+          </p>
+        )}
+    </motion>
   )
 }

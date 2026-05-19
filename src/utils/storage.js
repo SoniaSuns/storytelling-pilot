@@ -44,17 +44,6 @@ export function saveParticipant(name, participantData) {
   saveStudyData(data)
 }
 
-export function deleteParticipant(name) {
-  const data = getStudyData()
-  if (data.participants?.[name]) {
-    delete data.participants[name]
-    saveStudyData(data)
-  }
-  if (getActiveParticipantName() === name) {
-    setActiveParticipantName('')
-  }
-}
-
 export function clearAllData() {
   localStorage.removeItem(STORAGE_KEY)
   localStorage.removeItem(ACTIVE_PARTICIPANT_KEY)
