@@ -36,14 +36,16 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    const checkIn = participant?.dailyCheckIns?.[selectedDate] || {}
+    const checkIn =
+      getParticipant(participantName)?.dailyCheckIns?.[selectedDate] || {}
     setUsedAI(checkIn.usedAI ?? '')
     setHadIncident(checkIn.hadIncident ?? '')
     setNoIncidentReason(checkIn.noIncidentReason ?? '')
     setRelatedEvents(checkIn.relatedEvents ?? '')
     setDailyReflection(checkIn.dailyReflection ?? checkIn.notes ?? '')
+    setErrors({})
     setSaved(false)
-  }, [participantName, selectedDate, participant])
+  }, [participantName, selectedDate])
 
   function validate() {
     const next = {}
@@ -126,10 +128,10 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="required">
+        <fieldset className="form-group">
+          <legend className="field-legend required">
             Did you use any AI agent or intelligent system on this day?
-          </label>
+          </legend>
           <div className="radio-group">
             <label>
               <input
@@ -153,14 +155,14 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
             </label>
           </div>
           {errors.usedAI && <p className="error-message">{errors.usedAI}</p>}
-        </div>
+        </fieldset>
 
-        <div className="form-group">
-          <label className="required">
+        <fieldset className="form-group">
+          <legend className="field-legend required">
             Did you encounter any AI misunderstanding, failure, discomfort,
             boundary issue, or situation where the agent did not meet your
             expectation?
-          </label>
+          </legend>
           <div className="radio-group">
             <label>
               <input
@@ -186,7 +188,7 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
           {errors.hadIncident && (
             <p className="error-message">{errors.hadIncident}</p>
           )}
-        </div>
+        </fieldset>
 
         {hadIncident === 'No' && (
           <div className="form-group">

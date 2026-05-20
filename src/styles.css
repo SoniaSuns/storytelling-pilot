@@ -176,9 +176,24 @@ body {
   font-size: 0.9rem;
 }
 
-.form-group label.required::after {
+.form-group label.required::after,
+.field-legend.required::after {
   content: ' *';
   color: var(--color-danger);
+}
+
+fieldset.form-group {
+  border: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+}
+
+.field-legend {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+  padding: 0;
 }
 
 .form-group input[type='text'],
