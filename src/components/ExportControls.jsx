@@ -1,26 +1,54 @@
+import { useState } from 'react'
 import { getParticipant } from '../utils/storage'
 import { exportParticipantData, exportAllData } from '../utils/export'
+import { useI18n } from '../i18n/LanguageContext'
 
 export default function ExportControls({ participantName }) {
-  function handleExportMine() {
+  const { t } = useI18n()
+  const [busy, setBusy] = useState(false)
+
+  async function handleExportMine() {
     const data = getParticipant(participantName)
-    if (data) {
-      exportParticipantData(participantName, data)
+    if (!data) return
+    setBusy(true)
+    try {
+      await exportParticipantData(participantName, data)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleExportAll() {
+    setBusy(true)
+    try {
+      await exportAllData()
+    } finally {
+      setBusy(false)
     }
   }
 
   return (
     <div className="card">
-      <h2>Export data</h2>
+      <h2>{t('export.title')}</h2>
       <p className="hint" style={{ marginBottom: '1rem' }}>
-        Download your diary entries as JSON files to share with the researcher.
+        {t('export.hint')}
       </p>
       <div className="btn-group">
-        <button type="button" className="btn btn-primary" onClick={handleExportMine}>
-          Export My Data
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={busy}
+          onClick={handleExportMine}
+        >
+          {busy ? t('export.exporting') : t('export.exportMine')}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={exportAllData}>
-          Export All Local Data
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={busy}
+          onClick={handleExportAll}
+        >
+          {busy ? t('export.exporting') : t('export.exportAll')}
         </button>
       </div>
     </div>

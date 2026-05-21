@@ -1,3 +1,5 @@
+import { clearAllAttachmentBlobs } from './fileStore'
+
 const STORAGE_KEY = 'hciDiaryStudyData'
 const ACTIVE_PARTICIPANT_KEY = 'hciDiaryStudyActiveParticipant'
 
@@ -44,9 +46,10 @@ export function saveParticipant(name, participantData) {
   saveStudyData(data)
 }
 
-export function clearAllData() {
+export async function clearAllData() {
   localStorage.removeItem(STORAGE_KEY)
   localStorage.removeItem(ACTIVE_PARTICIPANT_KEY)
+  await clearAllAttachmentBlobs()
 }
 
 export function createEmptyParticipant(profile) {

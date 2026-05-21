@@ -1,13 +1,15 @@
 import { getParticipantNames } from '../utils/storage'
+import { useI18n } from '../i18n/LanguageContext'
 
 export default function ParticipantSelector({ onSelect, onCreateNew }) {
+  const { t } = useI18n()
   const names = getParticipantNames()
 
   return (
     <div className="card">
-      <h2>Continue as existing participant</h2>
+      <h2>{t('setup.continueTitle')}</h2>
       {names.length === 0 ? (
-        <p>No participants found. Please create a new profile.</p>
+        <p>{t('setup.noParticipants')}</p>
       ) : (
         <ul className="participant-list">
           {names.map((name) => (
@@ -21,7 +23,7 @@ export default function ParticipantSelector({ onSelect, onCreateNew }) {
       )}
       <div className="btn-group">
         <button type="button" className="btn btn-primary" onClick={onCreateNew}>
-          Create new participant
+          {t('setup.createNew')}
         </button>
       </div>
     </div>

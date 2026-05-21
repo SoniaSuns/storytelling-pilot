@@ -8,11 +8,11 @@ import {
   STUDY_DAYS,
 } from '../utils/dates'
 import { getParticipant, saveParticipant } from '../utils/storage'
-
-const REFLECTION_HINT =
-  'Click Share in ChatGPT and paste the link here. If that is inconvenient, summarize using: event, time, cause, what you wanted the AI to do, prompt given, agent response, why the answer was unsatisfying, and what information you think the AI was missing.'
+import { useI18n } from '../i18n/LanguageContext'
+import ReflectionAttachments from './ReflectionAttachments'
 
 export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
+  const { t, tOption, locale } = useI18n()
   const today = formatDateISO()
   const selectedDate = dateProp || today
   const isPastDay = selectedDate !== today
@@ -32,6 +32,9 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
   const [dailyReflection, setDailyReflection] = useState(
     existing.dailyReflection ?? existing.notes ?? ''
   )
+  const [reflectionFiles, setReflectionFiles] = useState(
+    existing.reflectionFiles ?? []
+  )
   const [errors, setErrors] = useState({})
   const [saved, setSaved] = useState(false)
 
@@ -43,27 +46,19 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
     setNoIncidentReason(checkIn.noIncidentReason ?? '')
     setRelatedEvents(checkIn.relatedEvents ?? '')
     setDailyReflection(checkIn.dailyReflection ?? checkIn.notes ?? '')
+    setReflectionFiles(checkIn.reflectionFiles ?? [])
     setErrors({})
     setSaved(false)
   }, [participantName, selectedDate])
 
   function validate() {
     const next = {}
-    if (!usedAI) {
-      next.usedAI = 'Please indicate whether you used AI on this day.'
-    }
-    if (!hadIncident) {
-      next.hadIncident =
-        'Please indicate whether you had an incident on this day.'
-    }
+    if (!usedAI) next.usedAI = t('checkIn.errUsedAI')
+    if (!hadIncident) next.hadIncident = t('checkIn.errHadIncident')
     if (hadIncident === 'No' && !noIncidentReason) {
-      next.noIncidentReason =
-        'Please select a reason when you had no incident.'
+      next.noIncidentReason = t('checkIn.errNoReason')
     }
-    if (!relatedEvents.trim()) {
-      next.relatedEvents =
-        'Please briefly describe related events, or enter 无 / None if there were none.'
-    }
+    if (!relatedEvents.trim()) next.relatedEvents = t('checkIn.errRelated')
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -82,56 +77,53 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
       noIncidentReason: hadIncident === 'No' ? noIncidentReason : '',
       relatedEvents: relatedEvents.trim(),
       dailyReflection: dailyReflection.trim(),
+      reflectionFiles,
       completedAt: existing.completedAt || now,
       updatedAt: now,
     }
-    const updated = {
+    saveParticipant(participantName, {
       ...participantData,
       dailyCheckIns: {
         ...participantData.dailyCheckIns,
         [selectedDate]: checkIn,
       },
-    }
-    saveParticipant(participantName, updated)
+    })
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
 
   const incidentCount = (participant?.incidents?.[selectedDate] || []).length
-  const dayLabel = isPastDay ? 'this day' : 'today'
+  const dayLabel = isPastDay ? t('common.thisDay') : t('common.today')
+  const displayDate = formatDisplayDate(selectedDate, locale)
 
   return (
     <div className="card">
       <div className="study-day-banner">
-        <strong>Study day {Math.min(Math.max(studyDay, 1), STUDY_DAYS)} of {STUDY_DAYS}</strong>
-        <span>{formatDisplayDate(selectedDate)}</span>
-        {isPastDay && <span className="progress-badge partial">Editing past day</span>}
+        <strong>
+          {t('checkIn.studyDay', {
+            day: Math.min(Math.max(studyDay, 1), STUDY_DAYS),
+            total: STUDY_DAYS,
+          })}
+        </strong>
+        <span>{displayDate}</span>
+        {isPastDay && (
+          <span className="progress-badge partial">{t('checkIn.editingPast')}</span>
+        )}
       </div>
 
-      <h2>Daily check-in</h2>
-      <p className="instructions">
-        Over the next 7 days, please record your everyday interactions with AI
-        agents or intelligent systems. We are especially interested in moments
-        when an AI agent misunderstood your task, lacked important context, made
-        an uncomfortable assumption, acted unexpectedly, or failed to meet your
-        expectations.
-      </p>
-      <p className="instructions">
-        If nothing notable happened, that is still useful. Please complete the
-        daily check-in and mark that no incident occurred.
-      </p>
+      <h2>{t('checkIn.title')}</h2>
+      <p className="instructions">{t('checkIn.intro1')}</p>
+      <p className="instructions">{t('checkIn.intro2')}</p>
 
       {saved && (
         <p className="success-message" role="status">
-          Check-in saved for {formatDisplayDate(selectedDate)}.
+          {t('checkIn.saved', { date: displayDate })}
         </p>
       )}
 
       <form onSubmit={handleSubmit}>
         <fieldset className="form-group">
-          <legend className="field-legend required">
-            Did you use any AI agent or intelligent system on this day?
-          </legend>
+          <legend className="field-legend required">{t('checkIn.usedAI')}</legend>
           <div className="radio-group">
             <label>
               <input
@@ -141,7 +133,7 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
                 checked={usedAI === 'Yes'}
                 onChange={() => setUsedAI('Yes')}
               />
-              Yes
+              {t('common.yes')}
             </label>
             <label>
               <input
@@ -151,18 +143,14 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
                 checked={usedAI === 'No'}
                 onChange={() => setUsedAI('No')}
               />
-              No
+              {t('common.no')}
             </label>
           </div>
           {errors.usedAI && <p className="error-message">{errors.usedAI}</p>}
         </fieldset>
 
         <fieldset className="form-group">
-          <legend className="field-legend required">
-            Did you encounter any AI misunderstanding, failure, discomfort,
-            boundary issue, or situation where the agent did not meet your
-            expectation?
-          </legend>
+          <legend className="field-legend required">{t('checkIn.hadIncident')}</legend>
           <div className="radio-group">
             <label>
               <input
@@ -172,7 +160,7 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
                 checked={hadIncident === 'Yes'}
                 onChange={() => setHadIncident('Yes')}
               />
-              Yes
+              {t('common.yes')}
             </label>
             <label>
               <input
@@ -182,7 +170,7 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
                 checked={hadIncident === 'No'}
                 onChange={() => setHadIncident('No')}
               />
-              No
+              {t('common.no')}
             </label>
           </div>
           {errors.hadIncident && (
@@ -193,17 +181,17 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
         {hadIncident === 'No' && (
           <div className="form-group">
             <label className="required" htmlFor="noIncidentReason">
-              If no incident happened on this day, what was the reason?
+              {t('checkIn.noIncidentReason')}
             </label>
             <select
               id="noIncidentReason"
               value={noIncidentReason}
               onChange={(e) => setNoIncidentReason(e.target.value)}
             >
-              <option value="">— Select —</option>
+              <option value="">{t('common.select')}</option>
               {NO_INCIDENT_REASONS.map((r) => (
                 <option key={r} value={r}>
-                  {r}
+                  {tOption('noIncident', r)}
                 </option>
               ))}
             </select>
@@ -215,17 +203,14 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
 
         <div className="form-group">
           <label className="required" htmlFor="relatedEvents">
-            Brief description of related events on this day
+            {t('checkIn.relatedEvents')}
           </label>
-          <p className="hint">
-            Summarize any AI-related events for this day. If there were none,
-            enter <strong>None</strong> or <strong>无</strong>.
-          </p>
+          <p className="hint">{t('checkIn.relatedEventsHint')}</p>
           <textarea
             id="relatedEvents"
             value={relatedEvents}
             onChange={(e) => setRelatedEvents(e.target.value)}
-            placeholder="e.g. Used ChatGPT for email drafting; asked Siri for directions… or: None"
+            placeholder={t('checkIn.relatedEventsPlaceholder')}
             rows={4}
           />
           {errors.relatedEvents && (
@@ -234,40 +219,46 @@ export default function DailyCheckIn({ participantName, dateISO: dateProp }) {
         </div>
 
         <div className="form-group">
-          <label htmlFor="dailyReflection">Brief daily reflection (optional)</label>
-          <p className="hint reflection-hint">{REFLECTION_HINT}</p>
+          <label htmlFor="dailyReflection">{t('checkIn.reflection')}</label>
+          <p className="hint reflection-hint">{t('checkIn.reflectionHint')}</p>
           <textarea
             id="dailyReflection"
             className="large"
             value={dailyReflection}
             onChange={(e) => setDailyReflection(e.target.value)}
-            placeholder="Paste a ChatGPT share link, or use the summary format described above."
+            placeholder={t('checkIn.reflectionPlaceholder')}
           />
         </div>
 
+        <ReflectionAttachments
+          participantName={participantName}
+          dateISO={selectedDate}
+          files={reflectionFiles}
+          onChange={setReflectionFiles}
+        />
+
         <div className="btn-group">
           <button type="submit" className="btn btn-primary">
-            Save check-in
+            {t('checkIn.saveCheckIn')}
           </button>
           {hadIncident === 'Yes' && (
             <Link
               to={`/incidents/${selectedDate}/new`}
               className="btn btn-secondary"
             >
-              Add incident report
+              {t('checkIn.addIncident')}
             </Link>
           )}
           <Link to="/progress" className="btn btn-secondary">
-            Back to progress
+            {t('checkIn.backProgress')}
           </Link>
         </div>
       </form>
 
       {hadIncident === 'Yes' && incidentCount > 0 && (
         <p className="hint" style={{ marginTop: '1rem' }}>
-          You have {incidentCount} incident report
-          {incidentCount !== 1 ? 's' : ''} for {dayLabel}.{' '}
-          <Link to={`/incidents/${selectedDate}`}>View incidents</Link>
+          {t('checkIn.incidentCount', { count: incidentCount, day: dayLabel })}{' '}
+          <Link to={`/incidents/${selectedDate}`}>{t('checkIn.viewIncidents')}</Link>
         </p>
       )}
     </div>

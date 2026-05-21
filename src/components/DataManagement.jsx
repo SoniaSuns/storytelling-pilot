@@ -4,17 +4,17 @@ import {
   setActiveParticipantName,
   getParticipantNames,
 } from '../utils/storage'
+import { useI18n } from '../i18n/LanguageContext'
 
 export default function DataManagement({ onSwitchParticipant, onCreateNew }) {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const names = getParticipantNames()
 
-  function handleClear() {
-    const confirmed = window.confirm(
-      'This will permanently remove all diary data stored in this browser.\n\nAre you sure you want to continue?'
-    )
+  async function handleClear() {
+    const confirmed = window.confirm(t('data.clearConfirm'))
     if (confirmed) {
-      clearAllData()
+      await clearAllData()
       navigate('/setup')
       window.location.reload()
     }
@@ -22,17 +22,17 @@ export default function DataManagement({ onSwitchParticipant, onCreateNew }) {
 
   return (
     <div className="card">
-      <h2>Participant & data management</h2>
+      <h2>{t('data.title')}</h2>
 
-      <h3>Switch participant</h3>
+      <h3>{t('data.switch')}</h3>
       {names.length === 0 ? (
-        <p>No other participants stored.</p>
+        <p>{t('data.noOthers')}</p>
       ) : (
         <ul className="participant-list">
           {names.map((name) => (
             <li key={name}>
               <button type="button" onClick={() => onSwitchParticipant(name)}>
-                Continue as {name}
+                {t('data.continueAs', { name })}
               </button>
             </li>
           ))}
@@ -41,7 +41,7 @@ export default function DataManagement({ onSwitchParticipant, onCreateNew }) {
 
       <div className="btn-group">
         <button type="button" className="btn btn-secondary" onClick={onCreateNew}>
-          Create new participant
+          {t('data.createNew')}
         </button>
         <button
           type="button"
@@ -51,16 +51,14 @@ export default function DataManagement({ onSwitchParticipant, onCreateNew }) {
             navigate('/setup')
           }}
         >
-          Back to setup
+          {t('data.backSetup')}
         </button>
       </div>
 
-      <h3>Clear all data</h3>
-      <p className="hint">
-        This will permanently remove all diary data stored in this browser.
-      </p>
+      <h3>{t('data.clearTitle')}</h3>
+      <p className="hint">{t('data.clearHint')}</p>
       <button type="button" className="btn btn-danger" onClick={handleClear}>
-        Clear Local Data
+        {t('data.clearBtn')}
       </button>
     </div>
   )

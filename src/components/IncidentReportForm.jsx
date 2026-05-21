@@ -8,8 +8,9 @@ import {
   DESIRED_BEHAVIORS,
   FEELINGS,
 } from '../utils/constants'
-import { formatDateISO } from '../utils/dates'
+import { formatDateISO, formatDisplayDate } from '../utils/dates'
 import { getParticipant, saveParticipant } from '../utils/storage'
+import { useI18n } from '../i18n/LanguageContext'
 
 const emptyForm = () => ({
   title: '',
@@ -44,6 +45,7 @@ export default function IncidentReportForm({
   dateISO = null,
 }) {
   const navigate = useNavigate()
+  const { t, locale } = useI18n()
   const today = dateISO || formatDateISO()
   const participant = getParticipant(participantName)
   const existingList = participant?.incidents?.[today] || []
@@ -74,17 +76,18 @@ export default function IncidentReportForm({
 
   function validate() {
     const next = {}
-    if (!form.agent) next.agent = 'Required.'
-    if (!form.task.trim()) next.task = 'Required.'
-    if (!form.wantedAgentToDo.trim()) next.wantedAgentToDo = 'Required.'
-    if (!form.agentResponse.trim()) next.agentResponse = 'Required.'
-    if (!form.whatWentWrong.trim()) next.whatWentWrong = 'Required.'
-    if (!form.failedToUnderstand.trim()) next.failedToUnderstand = 'Required.'
-    if (!form.shouldHaveKnown.trim()) next.shouldHaveKnown = 'Required.'
+    const req = t('incidentForm.required')
+    if (!form.agent) next.agent = req
+    if (!form.task.trim()) next.task = req
+    if (!form.wantedAgentToDo.trim()) next.wantedAgentToDo = req
+    if (!form.agentResponse.trim()) next.agentResponse = req
+    if (!form.whatWentWrong.trim()) next.whatWentWrong = req
+    if (!form.failedToUnderstand.trim()) next.failedToUnderstand = req
+    if (!form.shouldHaveKnown.trim()) next.shouldHaveKnown = req
     if (form.desiredBehaviors.length === 0) {
-      next.desiredBehaviors = 'Select at least one.'
+      next.desiredBehaviors = req
     }
-    if (!form.seriousness) next.seriousness = 'Required.'
+    if (!form.seriousness) next.seriousness = req
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -118,19 +121,16 @@ export default function IncidentReportForm({
 
   return (
     <div className="card">
-      <h2>{existing ? 'Edit incident report' : 'New incident report'}</h2>
-      <p className="hint">Date: {today}</p>
+      <h2>{existing ? t('incidentForm.edit') : t('incidentForm.new')}</h2>
+      <p className="hint">
+        {t('incidentForm.date', { date: formatDisplayDate(today, locale) })}
+      </p>
       <div className="instructions">
-        <p>
-          You do not need to write perfect sentences. Short notes, copied chat logs,
-          or rough descriptions are fine. Please focus on what you wanted the agent
-          to do, what the agent did, what it failed to understand, and what you wish
-          it had done instead.
-        </p>
+        <p>{t('incidents.intro')}</p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <h3>Section A: Basic information</h3>
+        <h3>{t('incidentForm.sectionA')}</h3>
         <div className="form-group">
           <label htmlFor="title">Incident title (optional)</label>
           <input id="title" type="text" value={form.title} onChange={(e) => setField('title', e.target.value)} />
@@ -142,14 +142,14 @@ export default function IncidentReportForm({
         <div className="form-group">
           <label>Location / situation (optional)</label>
           <select value={form.location} onChange={(e) => setField('location', e.target.value)}>
-            <option value="">— Select —</option>
+            <option value="">{t('common.select')}</option>
             {LOCATIONS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </div>
         <div className="form-group">
           <label className="required">AI agent / system used</label>
           <select value={form.agent} onChange={(e) => setField('agent', e.target.value)}>
-            <option value="">— Select —</option>
+            <option value="">{t('common.select')}</option>
             {INCIDENT_AGENTS.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
           {errors.agent && <p className="error-message">{errors.agent}</p>}
@@ -160,7 +160,7 @@ export default function IncidentReportForm({
           {errors.task && <p className="error-message">{errors.task}</p>}
         </div>
 
-        <h3>Section B: What happened?</h3>
+        <h3>{t('incidentForm.sectionB')}</h3>
         <div className="form-group">
           <label className="required" htmlFor="wantedAgentToDo">What did you want the AI agent to do?</label>
           <textarea id="wantedAgentToDo" value={form.wantedAgentToDo} onChange={(e) => setField('wantedAgentToDo', e.target.value)} />
@@ -181,7 +181,7 @@ export default function IncidentReportForm({
           {errors.whatWentWrong && <p className="error-message">{errors.whatWentWrong}</p>}
         </div>
 
-        <h3>Section C: Expected contextual knowledge</h3>
+        <h3>{t('incidentForm.sectionC')}</h3>
         <div className="form-group">
           <label className="required" htmlFor="failedToUnderstand">What do you think the AI agent failed to understand?</label>
           <textarea id="failedToUnderstand" value={form.failedToUnderstand} onChange={(e) => setField('failedToUnderstand', e.target.value)} />
@@ -230,7 +230,7 @@ export default function IncidentReportForm({
           </div>
         </div>
 
-        <h3>Section D: Repair and desired behavior</h3>
+        <h3>{t('incidentForm.sectionD')}</h3>
         <div className="form-group">
           <label>How did you respond or fix the problem?</label>
           <div className="checkbox-group">
@@ -270,7 +270,7 @@ export default function IncidentReportForm({
           <textarea id="idealResponse" value={form.idealResponse} onChange={(e) => setField('idealResponse', e.target.value)} />
         </div>
 
-        <h3>Section E: Impact</h3>
+        <h3>{t('incidentForm.sectionE')}</h3>
         <div className="form-group">
           <label className="required">How serious was this incident? (1 = very minor, 5 = very serious)</label>
           <div className="scale-group">
@@ -322,8 +322,16 @@ export default function IncidentReportForm({
         </div>
 
         <div className="btn-group">
-          <button type="submit" className="btn btn-primary">{existing ? 'Save changes' : 'Save incident report'}</button>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/incidents')}>Cancel</button>
+          <button type="submit" className="btn btn-primary">
+            {existing ? t('incidentForm.saveChanges') : t('incidentForm.save')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate(`/incidents/${today}`)}
+          >
+            {t('common.cancel')}
+          </button>
         </div>
       </form>
     </div>

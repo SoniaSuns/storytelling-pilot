@@ -1,38 +1,36 @@
 import { Link } from 'react-router-dom'
 import { formatDateISO, formatDisplayDate } from '../utils/dates'
 import { getParticipant } from '../utils/storage'
+import { useI18n } from '../i18n/LanguageContext'
 
 export default function IncidentList({ participantName, dateISO, onDelete }) {
+  const { t, locale } = useI18n()
   const selectedDate = dateISO || formatDateISO()
   const today = formatDateISO()
   const isPastDay = selectedDate !== today
   const participant = getParticipant(participantName)
   const incidents = participant?.incidents?.[selectedDate] || []
+  const displayDate = formatDisplayDate(selectedDate, locale)
 
   return (
     <div className="card">
-      <h2>Incident reports — {formatDisplayDate(selectedDate)}</h2>
+      <h2>{t('incidents.title', { date: displayDate })}</h2>
       {isPastDay && (
         <p className="hint">
-          Viewing incidents for a past study day.{' '}
-          <Link to="/progress">Back to study progress</Link>
+          {t('incidents.pastHint')}{' '}
+          <Link to="/progress">{t('incidents.backProgress')}</Link>
         </p>
       )}
       <div className="instructions">
-        <p>
-          You do not need to write perfect sentences. Short notes, copied chat
-          logs, or rough descriptions are fine. Please focus on what you wanted
-          the agent to do, what the agent did, what it failed to understand, and
-          what you wish it had done instead.
-        </p>
+        <p>{t('incidents.intro')}</p>
       </div>
 
       {incidents.length === 0 ? (
-        <p>No incident reports for this day yet.</p>
+        <p>{t('incidents.empty')}</p>
       ) : (
         incidents.map((inc) => (
-          <div   key={inc.id} className="incident-item">
-            <h4>{inc.title || 'Untitled incident'}</h4>
+          <div key={inc.id} className="incident-item">
+            <h4>{inc.title || t('incidents.untitled')}</h4>
             <p className="meta">
               {inc.agent} · {inc.location || '—'} · {inc.time || '—'}
             </p>
@@ -45,14 +43,14 @@ export default function IncidentList({ participantName, dateISO, onDelete }) {
                 to={`/incidents/${selectedDate}/edit/${inc.id}`}
                 className="btn btn-secondary"
               >
-                Edit
+                {t('common.edit')}
               </Link>
               <button
                 type="button"
                 className="btn btn-danger"
                 onClick={() => onDelete(inc.id, selectedDate)}
               >
-                Delete
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -64,10 +62,10 @@ export default function IncidentList({ participantName, dateISO, onDelete }) {
           to={`/incidents/${selectedDate}/new`}
           className="btn btn-primary"
         >
-          Add incident report
+          {t('incidents.add')}
         </Link>
         <Link to="/progress" className="btn btn-secondary">
-          Study progress
+          {t('incidents.studyProgress')}
         </Link>
       </div>
     </div>

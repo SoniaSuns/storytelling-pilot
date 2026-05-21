@@ -25,19 +25,25 @@ import {
   saveParticipant,
 } from './utils/storage'
 import { formatDateISO, isStudyDateISO } from './utils/dates'
+import { useI18n } from './i18n/LanguageContext'
+import LanguageSwitcher from './components/LanguageSwitcher'
 
 function SetupPage({ onParticipantReady }) {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const names = getParticipantNames()
   const [mode, setMode] = useState(names.length > 0 ? 'select' : 'create')
 
   return (
     <>
       <header className="app-header">
-        <h1>HCI Diary Study</h1>
-        <p className="subtitle">
-          Everyday AI-agent failures &amp; contextual intelligence (7 days)
-        </p>
+        <div className="header-row">
+          <div>
+            <h1>{t('app.title')}</h1>
+            <p className="subtitle">{t('app.subtitle')}</p>
+          </div>
+          <LanguageSwitcher />
+        </div>
       </header>
       <PrivacyNotice />
       {mode === 'select' ? (
@@ -62,11 +68,19 @@ function SetupPage({ onParticipantReady }) {
 }
 
 function AppShell({ participantName, children }) {
+  const { t } = useI18n()
   return (
     <>
       <header className="app-header">
-        <h1>HCI Diary Study</h1>
-        <p className="subtitle">Participant: {participantName}</p>
+        <div className="header-row">
+          <div>
+            <h1>{t('app.title')}</h1>
+            <p className="subtitle">
+              {t('app.subtitleParticipant', { name: participantName })}
+            </p>
+          </div>
+          <LanguageSwitcher />
+        </div>
       </header>
       <PrivacyNotice />
       <Navigation />
@@ -141,6 +155,7 @@ function IncidentEditPage({ participantName }) {
 }
 
 function AppRoutes() {
+  const { t } = useI18n()
   const [participantName, setParticipantName] = useState(() =>
     getActiveParticipantName()
   )
@@ -149,11 +164,7 @@ function AppRoutes() {
 
   const handleDeleteIncident = useCallback(
     (incidentId, dateISO) => {
-      if (
-        !window.confirm(
-          'Delete this incident report? This cannot be undone.'
-        )
-      ) {
+      if (!window.confirm(t('incidents.deleteConfirm'))) {
         return
       }
       const participant = getParticipant(participantName)
@@ -171,7 +182,7 @@ function AppRoutes() {
       saveParticipant(participantName, updated)
       setParticipantName(getActiveParticipantName())
     },
-    [participantName]
+    [participantName, t]
   )
 
   return (

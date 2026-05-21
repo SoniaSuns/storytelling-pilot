@@ -5,6 +5,7 @@ import {
   formatDateISO,
 } from '../utils/dates'
 import { getParticipant } from '../utils/storage'
+import { useI18n } from '../i18n/LanguageContext'
 
 function getCheckInStatus(checkIn) {
   if (!checkIn || !checkIn.completedAt) return 'missing'
@@ -21,6 +22,7 @@ function getIncidentStatus(checkIn, incidentsForDay) {
 }
 
 export default function StudyProgress({ participantName }) {
+  const { t, locale } = useI18n()
   const participant = getParticipant(participantName)
   const studyStartDate = participant?.profile?.studyStartDate
   const today = formatDateISO()
@@ -28,8 +30,8 @@ export default function StudyProgress({ participantName }) {
   if (!studyStartDate) {
     return (
       <div className="card">
-        <h2>Study progress</h2>
-        <p className="hint">Study start date is not set in your profile.</p>
+        <h2>{t('progress.title')}</h2>
+        <p className="hint">{t('progress.noStart')}</p>
       </div>
     )
   }
@@ -40,22 +42,18 @@ export default function StudyProgress({ participantName }) {
 
   return (
     <div className="card">
-      <h2>Study progress</h2>
-      <p className="instructions">
-        Track your 7-day diary study at a glance. Click a day below to fill in or
-        edit that day&apos;s daily check-in or incident reports (including past
-        days).
-      </p>
+      <h2>{t('progress.title')}</h2>
+      <p className="instructions">{t('progress.intro')}</p>
 
       <div className="progress-table-wrap">
         <table className="progress-table">
           <thead>
             <tr>
-              <th>Day</th>
-              <th>Date</th>
-              <th>Check-in</th>
-              <th>Incidents</th>
-              <th>Actions</th>
+              <th>{t('progress.day')}</th>
+              <th>{t('progress.date')}</th>
+              <th>{t('progress.checkInCol')}</th>
+              <th>{t('progress.incidentsCol')}</th>
+              <th>{t('progress.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -73,34 +71,41 @@ export default function StudyProgress({ participantName }) {
                     <Link
                       to={`/check-in/${date}`}
                       className="progress-date-link"
-                      title="Open daily check-in for this day"
                     >
-                      {formatDisplayDate(date)}
+                      {formatDisplayDate(date, locale)}
                     </Link>
                   </td>
                   <td>
                     <span
                       className={`status-badge ${checkInStatus === 'complete' ? 'complete' : 'missing'}`}
                     >
-                      {checkInStatus === 'complete' ? 'Completed' : 'Not completed'}
+                      {checkInStatus === 'complete'
+                        ? t('progress.completed')
+                        : t('progress.notCompleted')}
                     </span>
                   </td>
                   <td>
                     {incidentStatus === 'reported' && (
                       <span className="status-badge complete">
-                        Incident reported ({dayIncidents.length})
+                        {t('progress.incidentReported', {
+                          count: dayIncidents.length,
+                        })}
                       </span>
                     )}
                     {incidentStatus === 'none' && (
-                      <span className="status-badge partial">No incident</span>
+                      <span className="status-badge partial">
+                        {t('progress.noIncident')}
+                      </span>
                     )}
                     {incidentStatus === 'partial' && (
                       <span className="status-badge partial">
-                        Check-in says yes — add report
+                        {t('progress.needsReport')}
                       </span>
                     )}
                     {incidentStatus === 'unknown' && (
-                      <span className="status-badge missing">Unknown</span>
+                      <span className="status-badge missing">
+                        {t('progress.unknown')}
+                      </span>
                     )}
                   </td>
                   <td className="progress-actions">
@@ -108,13 +113,13 @@ export default function StudyProgress({ participantName }) {
                       to={`/check-in/${date}`}
                       className="btn btn-secondary btn-sm"
                     >
-                      Check-in
+                      {t('progress.checkInBtn')}
                     </Link>
                     <Link
                       to={`/incidents/${date}`}
                       className="btn btn-secondary btn-sm"
                     >
-                      Incidents
+                      {t('progress.incidentsBtn')}
                     </Link>
                   </td>
                 </tr>
@@ -127,8 +132,8 @@ export default function StudyProgress({ participantName }) {
       {checkIns[today]?.hadIncident === 'Yes' &&
         (incidents[today] || []).length === 0 && (
           <p className="hint" style={{ marginTop: '1rem' }}>
-            You marked an incident for today but have not added a report yet.{' '}
-            <Link to={`/incidents/${today}/new`}>Add incident report</Link>
+            {t('progress.todayReminder')}{' '}
+            <Link to={`/incidents/${today}/new`}>{t('progress.addReport')}</Link>
           </p>
         )}
     </div>

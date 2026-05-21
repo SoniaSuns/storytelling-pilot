@@ -48,9 +48,9 @@ export function isStudyDateISO(studyStartDate, dateISO) {
   return getStudyDates(studyStartDate).some((d) => d.date === dateISO)
 }
 
-export function formatDisplayDate(iso) {
+export function formatDisplayDate(iso, locale = 'en-US') {
   const d = parseDateISO(iso)
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString(locale, {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
